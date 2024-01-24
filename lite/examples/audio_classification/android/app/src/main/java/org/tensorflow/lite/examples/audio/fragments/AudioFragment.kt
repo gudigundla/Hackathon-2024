@@ -16,6 +16,7 @@
 
 package org.tensorflow.lite.examples.audio.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -46,7 +47,41 @@ class AudioFragment : Fragment() {
     private val audioClassificationListener = object : AudioClassificationListener {
         override fun onResult(results: List<Category>, inferenceTime: Long) {
             requireActivity().runOnUiThread {
-                adapter.categoryList = results
+                println(results.toString());
+                // filter only DOG categories
+                val dogCategories = ArrayList<Category>()
+                
+                for(category in results) {
+                    // to filter by score 
+                    // add '&& category.score >= 0.1f'
+                    println("Cur label: " + category.label + " " + category.score)
+                    if(category.label.contentEquals("Dog") && category.score > 0.2) {
+                        println("Dog detected");
+                        dogCategories.add(category)
+                    }
+                }
+
+                
+                if(dogCategories.isNotEmpty()) {
+//                    Toast.makeText(getActivity(), "Dog detected!", Toast.LENGTH_LONG).show()
+
+                    val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+                    builder
+                        .setMessage("Click YES to confirm")
+                        .setTitle("Dog detected")
+                        .setPositiveButton("Yes") { dialog, which ->
+                            // Do something.
+                        }
+                        .setNegativeButton("No") { dialog, which ->
+                            // Do something else.
+                        }
+
+                    val dialog: AlertDialog = builder.create()
+                    dialog.show()
+                }
+
+
+                adapter.categoryList = dogCategories
                 adapter.notifyDataSetChanged()
                 fragmentAudioBinding.bottomSheetLayout.inferenceTimeVal.text =
                     String.format("%d ms", inferenceTime)
